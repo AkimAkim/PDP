@@ -1,0 +1,32 @@
+---
+- hosts: localhost
+  connection: local
+  vars:
+    ec2_count: 1
+
+  tasks:
+  - name: Create EC2 instalces
+    ec2:
+      key_name: pdp
+      region: "us-east-1"
+      instance_type: t2.micro
+      instance_tags:
+        Name: ansible
+      image: ami-1853ac65
+      wait: yes
+      count: "{{ ec2_count }}"
+      vpc_subnet_id: subnet-4485bc21
+      assign_public_ip: no
+    register: ec2
+
+  - debug:
+      var: ec2
+
+  - name: Wait for SSH to come up
+    wait_for:
+      host: "{{ item.public_dns_name }}"
+      port: 22
+      delay: 60
+      timeout: 320
+      state: started
+    with_items: "{{ ec2.instances }}"
