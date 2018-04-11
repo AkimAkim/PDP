@@ -1,0 +1,20 @@
+---
+
+- hosts: localhost
+  connection: local
+
+  tasks:
+    - ec2_instance_facts:
+        filters:
+          "tag:Name": ansible
+      register: ans
+
+    - debug:
+        var: item.instance_id
+      with_items: "{{ ans.instances }}"
+
+    - ec2:
+        region: us-east-1
+        state: 'stopped'
+        instance_ids: "{{ item.instance_id }}"
+      with_items: "{{ ans.instances }}"
